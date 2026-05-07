@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parivahan Vehicle Details - With Chassis Number</title>
+    <title>Parivahan Vehicle Details - Working Version</title>
     <style>
         * {
             margin: 0;
@@ -78,39 +78,34 @@
             border-color: #667eea;
         }
 
-        .input-field small {
-            display: block;
-            margin-top: 5px;
-            font-size: 11px;
-            color: #888;
-        }
-
         button {
             align-self: flex-end;
             padding: 12px 25px;
-            font-size: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            transition: transform 0.2s;
             height: 45px;
         }
 
-        button:hover {
-            transform: translateY(-2px);
+        .proxy-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
         }
 
-        .proxy-note {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 10px;
-            margin-top: 15px;
-            border-radius: 8px;
+        .proxy-btn {
+            background: #6c757d;
+            padding: 8px 15px;
             font-size: 12px;
-            color: #856404;
+            height: auto;
+        }
+
+        .proxy-btn.active {
+            background: #28a745;
         }
 
         .loading {
@@ -188,24 +183,18 @@
             margin: 20px;
         }
 
-        .success-badge {
+        .success {
             background: #d4edda;
             color: #155724;
-            padding: 5px 10px;
+            padding: 10px;
             border-radius: 5px;
-            font-size: 12px;
-            display: inline-block;
-            margin-left: 10px;
+            margin-bottom: 15px;
         }
 
         @media (max-width: 768px) {
             .detail-row {
                 grid-template-columns: 1fr;
                 gap: 5px;
-            }
-            
-            button {
-                width: 100%;
             }
         }
     </style>
@@ -214,33 +203,34 @@
     <div class="container">
         <div class="header">
             <h1>🚗 Parivahan Vehicle Details</h1>
-            <p>Government Vehicle Registration Information System</p>
+            <p>Working Version with Multiple Proxy Support</p>
         </div>
 
         <div class="search-area">
             <div class="input-group">
                 <div class="input-field">
-                    <label>🔢 Vehicle Registration Number *</label>
-                    <input type="text" id="vehicleNo" placeholder="e.g., GJ13AM6695" autocomplete="off">
-                    <small>Enter full registration number</small>
+                    <label>🔢 Vehicle Number *</label>
+                    <input type="text" id="vehicleNo" placeholder="GJ13AM6695" value="GJ13AM6695">
                 </div>
                 <div class="input-field">
-                    <label>🔧 Chassis Number (Optional)</label>
-                    <input type="text" id="chassisNo" placeholder="Last 5 digits of chassis" value="1" autocomplete="off">
-                    <small>Usually last 5 digits of chassis number</small>
+                    <label>🔧 Chassis Number</label>
+                    <input type="text" id="chassisNo" placeholder="Last 5 digits" value="1">
                 </div>
-                <button onclick="searchVehicle()">🔍 Search Vehicle</button>
+                <button onclick="searchVehicle()">🔍 Search</button>
             </div>
-            <div class="proxy-note">
-                🔐 Using AES-256-ECB encryption with double Base64 encoding<br>
-                🌐 Data fetched from Parivahan Sewa (Government of India)
+            
+            <div class="proxy-buttons">
+                <button class="proxy-btn" onclick="setProxy('corsproxy')">🌐 CORS Proxy</button>
+                <button class="proxy-btn" onclick="setProxy('allorigins')">🔄 All Origins</button>
+                <button class="proxy-btn" onclick="setProxy('corsbridge')">🌉 CORS Bridge</button>
+                <button class="proxy-btn" onclick="setProxy('thingsproxy')">⚡ ThingsProxy</button>
             </div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">💡 Try different proxies if one doesn't work</p>
         </div>
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p style="margin-top: 20px;">🔐 Encrypting request with AES...</p>
-            <p style="font-size: 12px; color: #666;">Step 1: Getting access token<br>Step 2: Fetching state & office code<br>Step 3: Retrieving vehicle details</p>
+            <p id="loadingText">Initializing...</p>
         </div>
 
         <div class="results" id="results"></div>
@@ -253,68 +243,50 @@
         const CLIENT_SECRET = "de83eeeb148878ae375f28756492e8a0";
         const PARAM1 = "DsSFP37)0Mc#lG2Z";
         
-        // CORS proxies
-        const CORS_PROXIES = [
-            'https://cors-anywhere.herokuapp.com/',
-            'https://api.allorigins.win/raw?url=',
-            'https://cors.bridged.cc/'
-        ];
+        let currentProxy = 'corsproxy';
         
-        let currentProxyIndex = 0;
+        function setProxy(proxy) {
+            currentProxy = proxy;
+            document.querySelectorAll('.proxy-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            console.log(`Switched to proxy: ${proxy}`);
+        }
 
         function getProxyUrl(originalUrl) {
-            const proxy = CORS_PROXIES[currentProxyIndex];
-            if (proxy.includes('allorigins')) {
-                return `${proxy}${encodeURIComponent(originalUrl)}`;
-            }
-            return `${proxy}${originalUrl}`;
+            const proxies = {
+                'corsproxy': `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`,
+                'allorigins': `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`,
+                'corsbridge': `https://cors.bridged.cc/${originalUrl}`,
+                'thingsproxy': `https://cors.things.sh/${originalUrl}`
+            };
+            return proxies[currentProxy] || proxies['corsproxy'];
         }
 
-        // AES Encryption function (matches Python's Cryptodome)
         function aesEncryptECB(plaintext, keyBase64) {
-            try {
-                const key = CryptoJS.enc.Base64.parse(keyBase64);
-                const encrypted = CryptoJS.AES.encrypt(plaintext, key, {
-                    mode: CryptoJS.mode.ECB,
-                    padding: CryptoJS.pad.Pkcs7
-                });
-                
-                const ciphertext = encrypted.ciphertext.toString(CryptoJS.enc.Base64);
-                const doubleEncoded = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(ciphertext));
-                
-                return doubleEncoded;
-            } catch (error) {
-                throw new Error(`Encryption error: ${error.message}`);
-            }
+            const key = CryptoJS.enc.Base64.parse(keyBase64);
+            const encrypted = CryptoJS.AES.encrypt(plaintext, key, {
+                mode: CryptoJS.mode.ECB,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            const ciphertext = encrypted.ciphertext.toString(CryptoJS.enc.Base64);
+            return CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(ciphertext));
         }
 
-        // AES Decryption function
         function aesDecryptECB(ciphertextDoubleBase64, keyBase64) {
-            try {
-                const firstDecode = CryptoJS.enc.Base64.parse(ciphertextDoubleBase64).toString(CryptoJS.enc.Utf8);
-                const ciphertext = CryptoJS.enc.Base64.parse(firstDecode);
-                
-                const key = CryptoJS.enc.Base64.parse(keyBase64);
-                const decrypted = CryptoJS.AES.decrypt({
-                    ciphertext: ciphertext
-                }, key, {
-                    mode: CryptoJS.mode.ECB,
-                    padding: CryptoJS.pad.Pkcs7
-                });
-                
-                let result = decrypted.toString(CryptoJS.enc.Utf8);
-                // Remove null bytes and padding
-                result = result.replace(/\x00/g, '').replace(/[\x01-\x0F]/g, '');
-                return result;
-            } catch (error) {
-                throw new Error(`Decryption error: ${error.message}`);
-            }
+            const firstDecode = CryptoJS.enc.Base64.parse(ciphertextDoubleBase64).toString(CryptoJS.enc.Utf8);
+            const ciphertext = CryptoJS.enc.Base64.parse(firstDecode);
+            const key = CryptoJS.enc.Base64.parse(keyBase64);
+            const decrypted = CryptoJS.AES.decrypt({ ciphertext: ciphertext }, key, {
+                mode: CryptoJS.mode.ECB,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            let result = decrypted.toString(CryptoJS.enc.Utf8);
+            result = result.replace(/\x00/g, '').replace(/[\x01-\x0F]/g, '');
+            return result;
         }
 
-        // Step 1: Get Access Token
         async function getAccessToken() {
             const url = "https://delhigw.napix.gov.in/nic/parivahan/oauth2/token";
-            const proxyUrl = getProxyUrl(url);
             
             const params = new URLSearchParams();
             params.append('grant_type', 'client_credentials');
@@ -322,32 +294,44 @@
             params.append('client_id', CLIENT_ID);
             params.append('client_secret', CLIENT_SECRET);
             
+            // For token endpoint, use direct fetch (no proxy needed sometimes)
             try {
-                const response = await fetch(proxyUrl, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
-                        'User-Agent': 'okhttp/4.9.2',
-                        'Content-Type': 'application/x-www-form-urlencoded'
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: params
                 });
                 
-                const data = await response.json();
-                if (data.access_token) {
+                if (response.ok) {
+                    const data = await response.json();
                     return data.access_token;
-                } else {
-                    throw new Error("No access token in response");
                 }
-            } catch (error) {
-                if (currentProxyIndex < CORS_PROXIES.length - 1) {
-                    currentProxyIndex++;
-                    return getAccessToken();
-                }
-                throw new Error(`Failed to get token: ${error.message}`);
+            } catch(e) {
+                console.log("Direct fetch failed, trying proxy...");
             }
+            
+            // Try with proxy
+            const proxyUrl = getProxyUrl(url);
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: params
+            });
+            
+            const data = await response.json();
+            if (data.access_token) {
+                return data.access_token;
+            } else if (data.contents) {
+                const parsed = JSON.parse(data.contents);
+                return parsed.access_token;
+            }
+            throw new Error("Failed to get token");
         }
 
-        // Step 2: Get State Code and Office Code
         async function getStateAndOfficeCode(vehicleNo, token) {
             const key1 = "MDIzNTE1NzEhfikjQComXg==";
             const plaintext = JSON.stringify({ regNo: vehicleNo });
@@ -359,10 +343,7 @@
             const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: {
-                    'User-Agent': 'okhttp/4.9.2',
-                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'timestamp': Date.now().toString(),
                     'Authorization': `Bearer ${token}`,
                     'Param2': '2.0.133',
                     'Param1': PARAM1
@@ -370,16 +351,18 @@
                 body: JSON.stringify({ data: encryptedData })
             });
             
-            const data = await response.json();
+            let data = await response.json();
+            if (data.contents) {
+                data = JSON.parse(data.contents);
+            }
+            
             if (data.data) {
                 const decrypted = aesDecryptECB(data.data, key1);
                 return JSON.parse(decrypted);
-            } else {
-                throw new Error("No data in response");
             }
+            throw new Error("Failed to get state/office code");
         }
 
-        // Step 3: Get Mobile Number with Chassis
         async function getMobileNumber(vehicleNo, chassisNo, stateCode, officeCode, token) {
             const key2 = "MDgyMzE1NzEhfikjQComXg==";
             const plaintext = JSON.stringify({
@@ -397,10 +380,7 @@
             const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: {
-                    'User-Agent': 'okhttp/4.9.2',
-                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'timestamp': Date.now().toString(),
                     'Authorization': `Bearer ${token}`,
                     'Param2': '2.0.133',
                     'Param1': PARAM1
@@ -408,52 +388,45 @@
                 body: JSON.stringify({ data: encryptedData })
             });
             
-            const data = await response.json();
+            let data = await response.json();
+            if (data.contents) {
+                data = JSON.parse(data.contents);
+            }
+            
             if (data.data) {
                 const decrypted = aesDecryptECB(data.data, key2);
                 const result = JSON.parse(decrypted);
-                return {
-                    mobileNo: result.data?.mobileNo || "Not found",
-                    fullResponse: result
-                };
-            } else {
-                throw new Error("No data in response");
+                return result.data?.mobileNo || "Not found";
             }
+            throw new Error("Failed to get mobile number");
         }
 
-        // Main search function
         async function searchVehicle() {
             const vehicleNo = document.getElementById('vehicleNo').value.trim().toUpperCase();
             const chassisNo = document.getElementById('chassisNo').value.trim() || "1";
             
             if (!vehicleNo) {
-                alert("Please enter a vehicle number!");
+                alert("Please enter vehicle number!");
                 return;
             }
             
-            // Reset UI
             document.getElementById('loading').style.display = 'block';
             document.getElementById('results').style.display = 'none';
-            document.getElementById('results').innerHTML = '';
-            currentProxyIndex = 0;
-            
-            // Update loading text
-            const loadingText = document.querySelector('#loading p:first-of-type');
+            const loadingText = document.getElementById('loadingText');
             
             try {
-                loadingText.innerHTML = "🔑 Step 1/3: Getting access token...";
+                loadingText.innerHTML = "🔑 Getting access token...";
                 const token = await getAccessToken();
                 
-                loadingText.innerHTML = "📍 Step 2/3: Fetching state & office code...";
+                loadingText.innerHTML = "📍 Getting state & office code...";
                 const stateOfficeData = await getStateAndOfficeCode(vehicleNo, token);
                 
-                loadingText.innerHTML = "📱 Step 3/3: Retrieving vehicle details with chassis...";
-                const result = await getMobileNumber(vehicleNo, chassisNo, stateOfficeData.stateCd, stateOfficeData.offCd, token);
+                loadingText.innerHTML = "📱 Getting mobile number...";
+                const mobileNo = await getMobileNumber(vehicleNo, chassisNo, stateOfficeData.stateCd, stateOfficeData.offCd, token);
                 
-                displayResults(vehicleNo, chassisNo, result.mobileNo, stateOfficeData);
+                displayResults(vehicleNo, chassisNo, mobileNo, stateOfficeData);
                 
             } catch (error) {
-                console.error("Error:", error);
                 displayError(error.message);
             } finally {
                 document.getElementById('loading').style.display = 'none';
@@ -462,67 +435,40 @@
         }
         
         function displayResults(vehicleNo, chassisNo, mobileNo, stateOfficeData) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = `
+            document.getElementById('results').innerHTML = `
                 <div class="vehicle-card">
                     <div class="section">
-                        <div class="section-title">
-                            🚗 VEHICLE INFORMATION 
-                            <span class="success-badge">✓ Success</span>
+                        <div class="section-title">✅ VEHICLE FOUND</div>
+                        <div class="detail-row">
+                            <div class="detail-label">Registration Number:</div>
+                            <div class="detail-value">${vehicleNo}</div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-label">🔢 Registration Number:</div>
-                            <div class="detail-value"><strong>${vehicleNo}</strong></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">🔧 Chassis Number (Used):</div>
+                            <div class="detail-label">Chassis Number Used:</div>
                             <div class="detail-value">${chassisNo}</div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-label">📍 State Code:</div>
+                            <div class="detail-label">State Code:</div>
                             <div class="detail-value">${stateOfficeData.stateCd || 'N/A'}</div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-label">🏢 Office Code:</div>
+                            <div class="detail-label">Office Code:</div>
                             <div class="detail-value">${stateOfficeData.offCd || 'N/A'}</div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-label">📱 Registered Mobile Number:</div>
-                            <div class="detail-value">
-                                <strong style="color: #28a745; font-size: 18px;">${mobileNo}</strong>
-                            </div>
+                            <div class="detail-label">Registered Mobile:</div>
+                            <div class="detail-value"><strong style="color: green;">${mobileNo}</strong></div>
                         </div>
                     </div>
-                    
                     <div class="section">
-                        <div class="section-title">🔐 Security Details</div>
+                        <div class="section-title">ℹ️ Info</div>
                         <div class="detail-row">
-                            <div class="detail-label">Encryption Algorithm:</div>
-                            <div class="detail-value">AES-256-ECB with PKCS7 Padding</div>
+                            <div class="detail-label">Proxy Used:</div>
+                            <div class="detail-value">${currentProxy}</div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-label">Encoding:</div>
-                            <div class="detail-value">Double Base64 Encoding</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">API Version:</div>
-                            <div class="detail-value">2.0.133</div>
-                        </div>
-                    </div>
-                    
-                    <div class="section">
-                        <div class="section-title">ℹ️ Important Notes</div>
-                        <div class="detail-row">
-                            <div class="detail-label">📌 Note 1:</div>
-                            <div class="detail-value">Chassis number helps verify vehicle authenticity</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">📌 Note 2:</div>
-                            <div class="detail-value">Data sourced from Parivahan Sewa, Government of India</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">📌 Note 3:</div>
-                            <div class="detail-value">Mobile number is registered with RTO during vehicle purchase</div>
+                            <div class="detail-label">Encryption:</div>
+                            <div class="detail-value">AES-256-ECB</div>
                         </div>
                     </div>
                 </div>
@@ -530,37 +476,17 @@
         }
         
         function displayError(message) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = `
+            document.getElementById('results').innerHTML = `
                 <div class="error">
-                    <strong>❌ Error Occurred</strong><br><br>
+                    <strong>❌ Error</strong><br><br>
                     ${message}<br><br>
-                    <strong>Possible Solutions:</strong><br>
-                    📌 1. Verify vehicle number format (e.g., GJ13AM6695)<br>
-                    📌 2. Check chassis number (try "1" if unknown)<br>
-                    📌 3. <a href="https://cors-anywhere.herokuapp.com/" target="_blank">Click here</a> to activate CORS proxy<br>
-                    📌 4. Try after some time<br>
-                    📌 5. Use VPN if in restricted network<br><br>
-                    <small>Note: Some vehicles may not have mobile number registered</small>
+                    <strong>Solutions:</strong><br>
+                    1. Try a different proxy from the buttons above<br>
+                    2. Check if vehicle number is correct<br>
+                    3. Try after some time
                 </div>
             `;
         }
-        
-        // Enter key support
-        document.getElementById('vehicleNo').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchVehicle();
-            }
-        });
-        
-        document.getElementById('chassisNo').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchVehicle();
-            }
-        });
-        
-        console.log("✅ Application loaded. CORS proxies ready.");
-        console.log("ℹ️ If CORS error appears, visit: https://cors-anywhere.herokuapp.com/");
     </script>
 </body>
 </html>

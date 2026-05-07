@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parivahan Vehicle Details - AES Encryption</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .search-area {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2a5298;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 14px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2a5298;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            padding: 30px;
+            display: none;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #2a5298;
+        }
+
+        .detail-value {
+            color: #333;
+            word-break: break-all;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px;
+        }
+
+        .step-log {
+            background: #f0f0f0;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .step-log h4 {
+            margin-bottom: 10px;
+            color: #2a5298;
+        }
+
+        @media (max-width: 768px) {
+            .detail-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Parivahan Vehicle Details</h1>
+            <p>Government Vehicle Registration Information System</p>
+        </div>
+
+        <div class="search-area">
+            <div class="input-group">
+                <input type="text" id="vehicleNo" placeholder="Vehicle Number (e.g., GJ13AM6695)" autocomplete="off">
+                <input type="text" id="chassisNo" placeholder="Chassis Number (optional)" autocomplete="off" value="1">
+                <button onclick="fetchVehicleDetails()">🔍 Search Vehicle</button>
+            </div>
+            <p style="font-size: 12px; color: #666; text-align: center;">⚠️ Note: This uses Parivahan API with AES encryption</p>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing encryption & fetching data...</p>
+        </div>
+
+        <div class="results" id="results"></div>
+        <div class="step-log" id="stepLog" style="display: none;">
+            <h4>📋 Process Log:</h4>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        // Configuration
+        const CLIENT_ID = "b91c303443f61b37106750823881cd2f";
+        const CLIENT_SECRET = "de83eeeb148878ae375f28756492e8a0";
+        const PARAM1 = "DsSFP37)0Mc#lG2Z";
+        
+        let accessToken = null;
+        let stepLogs = [];
+
+        function addLog(message, isError = false) {
+            stepLogs.unshift(`[${new Date().toLocaleTimeString()}] ${message}`);
+            if (stepLogs.length > 20) stepLogs.pop();
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logDiv = document.getElementById('logContent');
+            if (logDiv) {
+                logDiv.innerHTML = stepLogs.map(log => 
+                    `<div style="color: ${log.includes('❌') ? '#c33' : '#333'}; margin: 5px 0;">${log}</div>`
+                ).join('');
+                document.getElementById('stepLog').style.display = 'block';
+            }
+        }
+
+        // AES Encryption function (simulating Python's Cryptodome)
+        function aesEncryptECB(plaintext, keyBase64) {
+            try {
+                const key = CryptoJS.enc.Base64.parse(keyBase64);
+                const encrypted = CryptoJS.AES.encrypt(plaintext, key, {
+                    mode: CryptoJS.mode.ECB,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+                
+                // Get ciphertext as Base64
+                const ciphertext = encrypted.ciphertext.toString(CryptoJS.enc.Base64);
+                
+                // Double Base64 encode
+                const doubleEncoded = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(ciphertext));
+                
+                return doubleEncoded;
+            } catch (error) {
+                addLog(`❌ Encryption error: ${error.message}`, true);
+                throw error;
+            }
+        }
+
+        // AES Decryption function
+        function aesDecryptECB(ciphertextDoubleBase64, keyBase64) {
+            try {
+                // First decode from double Base64
+                const firstDecode = CryptoJS.enc.Base64.parse(ciphertextDoubleBase64).toString(CryptoJS.enc.Utf8);
+                const ciphertext = CryptoJS.enc.Base64.parse(firstDecode);
+                
+                const key = CryptoJS.enc.Base64.parse(keyBase64);
+                const decrypted = CryptoJS.AES.decrypt({
+                    ciphertext: ciphertext
+                }, key, {
+                    mode: CryptoJS.mode.ECB,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+                
+                return decrypted.toString(CryptoJS.enc.Utf8);
+            } catch (error) {
+                addLog(`❌ Decryption error: ${error.message}`, true);
+                throw error;
+            }
+        }
+
+        // Step 1: Get Access Token
+        async function getAccessToken() {
+            addLog("🔑 Requesting access token...");
+            
+            const url = "https://delhigw.napix.gov.in/nic/parivahan/oauth2/token";
+            const params = new URLSearchParams();
+            params.append('grant_type', 'client_credentials');
+            params.append('scope', 'napix');
+            params.append('client_id', CLIENT_ID);
+            params.append('client_secret', CLIENT_SECRET);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'User-Agent': 'okhttp/4.9.2',
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params
+                });
+                
+                const data = await response.json();
+                if (data.access_token) {
+                    addLog("✅ Access token obtained successfully");
+                    return data.access_token;
+                } else {
+                    throw new Error("No access token in response");
+                }
+            } catch (error) {
+                addLog(`❌ Failed to get token: ${error.message}`, true);
+                throw error;
+            }
+        }
+
+        // Step 2: Get State Code and Office Code
+        async function getStateAndOfficeCode(vehicleNo, token) {
+            addLog("📍 Fetching state and office code...");
+            
+            const key1 = "MDIzNTE1NzEhfikjQComXg==";
+            const plaintext = JSON.stringify({ regNo: vehicleNo });
+            const encryptedData = aesEncryptECB(plaintext, key1);
+            
+            const url = "https://delhigw.napix.gov.in/nic/parivahan/mparivahan/wrapperapi/vahan/vahancapi/masterconfig/getstate_cdOffcd";
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'User-Agent': 'okhttp/4.9.2',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'timestamp': Date.now().toString(),
+                    'Authorization': `Bearer ${token}`,
+                    'Param2': '2.0.133',
+                    'Param1': PARAM1
+                },
+                body: JSON.stringify({ data: encryptedData })
+            });
+            
+            const data = await response.json();
+            if (data.data) {
+                const decrypted = aesDecryptECB(data.data, key1);
+                const result = JSON.parse(decrypted);
+                addLog(`✅ State Code: ${result.stateCd}, Office Code: ${result.offCd}`);
+                return result;
+            } else {
+                throw new Error("No data in response");
+            }
+        }
+
+        // Step 3: Get Mobile Number
+        async function getMobileNumber(vehicleNo, chassisNo, stateCode, officeCode, token) {
+            addLog("📱 Fetching mobile number...");
+            
+            const key2 = "MDgyMzE1NzEhfikjQComXg==";
+            const plaintext = JSON.stringify({
+                regnNo: vehicleNo,
+                stateCode: stateCode,
+                chassisNo: chassisNo,
+                officeCode: officeCode
+            });
+            
+            const encryptedData = aesEncryptECB(plaintext, key2);
+            
+            const url = "https://delhigw.napix.gov.in/nic/parivahan/mparivahan/wrapperapi/vahan/vahancapi/updatemobile/getMobileNo";
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'User-Agent': 'okhttp/4.9.2',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'timestamp': Date.now().toString(),
+                    'Authorization': `Bearer ${token}`,
+                    'Param2': '2.0.133',
+                    'Param1': PARAM1
+                },
+                body: JSON.stringify({ data: encryptedData })
+            });
+            
+            const data = await response.json();
+            if (data.data) {
+                const decrypted = aesDecryptECB(data.data, key2);
+                const result = JSON.parse(decrypted);
+                const mobileNo = result.data?.mobileNo || "Not found";
+                addLog(`✅ Mobile Number: ${mobileNo}`);
+                return mobileNo;
+            } else {
+                throw new Error("No data in response");
+            }
+        }
+
+        // Main function
+        async function fetchVehicleDetails() {
+            const vehicleNo = document.getElementById('vehicleNo').value.trim().toUpperCase();
+            const chassisNo = document.getElementById('chassisNo').value.trim() || "1";
+            
+            if (!vehicleNo) {
+                alert("Please enter vehicle number!");
+                return;
+            }
+            
+            // Reset UI
+            stepLogs = [];
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('results').innerHTML = '';
+            
+            try {
+                addLog(`🚗 Starting search for vehicle: ${vehicleNo}`);
+                
+                // Step 1: Get Token
+                const token = await getAccessToken();
+                
+                // Step 2: Get State & Office Code
+                const stateOfficeData = await getStateAndOfficeCode(vehicleNo, token);
+                
+                // Step 3: Get Mobile Number
+                const mobileNo = await getMobileNumber(vehicleNo, chassisNo, stateOfficeData.stateCd, stateOfficeData.offCd, token);
+                
+                // Display Results
+                displayResults(vehicleNo, chassisNo, mobileNo, stateOfficeData);
+                addLog("✅ Process completed successfully!");
+                
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, true);
+                displayError(error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+            }
+        }
+        
+        function displayResults(vehicleNo, chassisNo, mobileNo, stateOfficeData) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="info-card">
+                    <h3 style="color: #2a5298; margin-bottom: 15px;">✅ Vehicle Information Retrieved</h3>
+                    <div class="detail-row">
+                        <div class="detail-label">🚗 Registration Number:</div>
+                        <div class="detail-value">${vehicleNo}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">🔧 Chassis Number:</div>
+                        <div class="detail-value">${chassisNo}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">📍 State Code:</div>
+                        <div class="detail-value">${stateOfficeData.stateCd || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">🏢 Office Code:</div>
+                        <div class="detail-value">${stateOfficeData.offCd || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">📱 Registered Mobile Number:</div>
+                        <div class="detail-value">${mobileNo}</div>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h4 style="color: #2a5298; margin-bottom: 10px;">ℹ️ Note:</h4>
+                    <p>This information is retrieved from Parivahan Sewa (Government of India) using AES-ECB encryption as per official API specifications.</p>
+                    <p style="margin-top: 10px; font-size: 12px; color: #666;">🔐 Data is encrypted and decrypted using official keys</p>
+                </div>
+            `;
+        }
+        
+        function displayError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="error">
+                    <strong>❌ Error Occurred</strong><br>
+                    ${message}<br><br>
+                    <small>Possible reasons:<br>
+                    - Invalid vehicle number<br>
+                    - API key expired<br>
+                    - Network issues<br>
+                    - Server maintenance</small>
+                </div>
+            `;
+        }
+        
+        // Add enter key support
+        document.getElementById('vehicleNo').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') fetchVehicleDetails();
+        });
+    </script>
+</body>
+</html>

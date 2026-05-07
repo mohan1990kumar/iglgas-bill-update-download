@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Details Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .search-area {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 250px;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            padding: 30px;
+            display: none;
+        }
+
+        .vehicle-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            display: inline-block;
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px;
+        }
+
+        .history {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        .history h3 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .history-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .history-btn {
+            background: #e0e0e0;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .detail-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            
+            .detail-label {
+                font-weight: bold;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Vehicle Details Finder</h1>
+            <p>Enter Indian vehicle registration number to get details</p>
+        </div>
+
+        <div class="search-area">
+            <div class="input-group">
+                <input type="text" id="vehicleNumber" placeholder="Enter Registration Number (e.g., MH01AB1234)" autocomplete="off">
+                <button onclick="searchVehicle()">🔍 Search Vehicle</button>
+            </div>
+            
+            <div class="history" id="history" style="display: none;">
+                <h3>📜 Recent Searches:</h3>
+                <div class="history-buttons" id="historyList"></div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px;">Fetching vehicle details...</p>
+        </div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = "https://vapi.zeltronaddy.in/v1/vehicle";
+        const API_KEY = "vapi_VTnEyjcyQE_xa1fP0-6YMntlXVqRk9f7_xr3RvnYeVU";
+        
+        let searchHistory = JSON.parse(localStorage.getItem('vehicleHistory') || '[]');
+
+        function saveToHistory(regNo) {
+            if (!searchHistory.includes(regNo)) {
+                searchHistory.unshift(regNo);
+                if (searchHistory.length > 5) searchHistory.pop();
+                localStorage.setItem('vehicleHistory', JSON.stringify(searchHistory));
+                updateHistoryUI();
+            }
+        }
+
+        function updateHistoryUI() {
+            const historyDiv = document.getElementById('history');
+            const historyList = document.getElementById('historyList');
+            
+            if (searchHistory.length > 0) {
+                historyDiv.style.display = 'block';
+                historyList.innerHTML = searchHistory.map(reg => 
+                    `<div class="history-btn" onclick="searchVehicle('${reg}')">${reg}</div>`
+                ).join('');
+            } else {
+                historyDiv.style.display = 'none';
+            }
+        }
+
+        async function searchVehicle(regNo = null) {
+            const input = regNo || document.getElementById('vehicleNumber').value;
+            if (!input.trim()) {
+                alert('Please enter a vehicle number!');
+                return;
+            }
+
+            const vehicleNumber = input.trim().toUpperCase();
+            document.getElementById('vehicleNumber').value = vehicleNumber;
+            
+            const loading = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+            
+            loading.style.display = 'block';
+            resultsDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}?reg=${vehicleNumber}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'x-api-key': API_KEY
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    saveToHistory(vehicleNumber);
+                    displayVehicleDetails(data);
+                } else {
+                    showError('❌ Data fetch failed! Please check the registration number.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('❌ Network error! Please check your internet connection and try again.');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayVehicleDetails(data) {
+            const d = data.data;
+            const reg = data.regn_no;
+            
+            const html = `
+                <div class="vehicle-card">
+                    <div class="section">
+                        <div class="section-title">🚗 VEHICLE DETAILS — ${reg}</div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">📋 Registration & Owner</div>
+                        <div class="detail-row">
+                            <div class="detail-label">🔢 Reg. Number:</div>
+                            <div class="detail-value">${reg}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">🏦 Reg. Authority:</div>
+                            <div class="detail-value">${d.rto_code || 'N/A'} ${d.off_name || ''}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">✅ Status:</div>
+                            <div class="detail-value">${d.vh_status || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">👤 Owner:</div>
+                            <div class="detail-value">${d.owner_name || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">👨‍👩‍👧 Father/Husband:</div>
+                            <div class="detail-value">${d.f_name || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">🏠 Address</div>
+                        <div class="detail-row">
+                            <div class="detail-label">📍 Permanent:</div>
+                            <div class="detail-value">${d.perm_address || 'N/A'} ${d.c_pincode || ''}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">📍 Current:</div>
+                            <div class="detail-value">${d.current_address || 'N/A'} ${d.c_pincode || ''}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">📅 Important Dates</div>
+                        <div class="detail-row">
+                            <div class="detail-label">📅 Registration:</div>
+                            <div class="detail-value">${d.regn_dt || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">🛡️ Insurance Valid:</div>
+                            <div class="detail-value">${d.insurance_upto || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">🚗 Vehicle Details</div>
+                        <div class="detail-row">
+                            <div class="detail-label">🔑 Chassis:</div>
+                            <div class="detail-value">${d.chasi_no || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">🔧 Engine:</div>
+                            <div class="detail-value">${d.eng_no || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">🏭 Make:</div>
+                            <div class="detail-value">${d.maker_name || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">📱 Model:</div>
+                            <div class="detail-value">${d.model_name || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">📋 Variant:</div>
+                            <div class="detail-value">${d.variant || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">🚗 Class:</div>
+                            <div class="detail-value">${d.vh_class_desc || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">🚙 Body:</div>
+                            <div class="detail-value">${d.body_type || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">⛽ Fuel:</div>
+                            <div class="detail-value">${d.fuel_descr || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">🎨 Color:</div>
+                            <div class="detail-value">${d.color || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">⚙️ Technical Specs</div>
+                        <div class="detail-row">
+                            <div class="detail-label">🌍 Emission:</div>
+                            <div class="detail-value">${d.norms_descr || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">⚡ Cubic Capacity:</div>
+                            <div class="detail-value">${d.cubic_cap || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">⚖️ Unladen Weight:</div>
+                            <div class="detail-value">${d.unld_wt || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">⚖️ Gross Weight:</div>
+                            <div class="detail-value">${d.gcw || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">👥 Seating:</div>
+                            <div class="detail-value">${d.seat_cap || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">🔄 Wheelbase:</div>
+                            <div class="detail-value">${d.wheelbase || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">🏦 Finance</div>
+                        <div class="detail-row">
+                            <div class="detail-label">🏦 Financer:</div>
+                            <div class="detail-value">${d.financer || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">🛡️ Insurance</div>
+                        <div class="detail-row">
+                            <div class="detail-label">🏢 Company:</div>
+                            <div class="detail-value">${d.insurance_company || 'N/A'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">📜 Policy No:</div>
+                            <div class="detail-value">${d.insurance_policy_no || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">📱 Contact</div>
+                        <div class="detail-row">
+                            <div class="detail-label">📱 Mobile:</div>
+                            <div class="detail-value">${d.mobileNo || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="error">${message}</div>`;
+            resultsDiv.style.display = 'block';
+        }
+
+        document.getElementById('vehicleNumber').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchVehicle();
+            }
+        });
+
+        updateHistoryUI();
+    </script>
+</body>
+</html>
